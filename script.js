@@ -28,6 +28,7 @@ const db = firebase.firestore();
 
 let allVideos = [];
 let videosLoaded = false;
+let currentPlayingVideo = null;
 
 // Load & Apply Custom Settings
 function getSiteSettings() {
@@ -125,7 +126,7 @@ function resetCustomSettings() {
     document.getElementById("customPanelStatus").innerText = "Reset to default! 🔄";
 }
 
-// Fixed File Name Display (Does NOT destroy fileInput!)
+// File Name Display (Does NOT destroy fileInput!)
 function updateFileName() {
     const fileInput = document.getElementById("videoFile");
     const nameSpan = document.getElementById("fileNameDisplay");
@@ -180,6 +181,7 @@ function displayVideos(videos) {
 }
 
 function playVideo(video) {
+    currentPlayingVideo = video;
     const playerSection = document.getElementById("playerSection");
     const player = document.getElementById("mainVideoPlayer");
 
@@ -195,7 +197,39 @@ function closePlayer() {
     const player = document.getElementById("mainVideoPlayer");
     player.pause();
     player.src = "";
+    currentPlayingVideo = null;
     document.getElementById("playerSection").classList.add("hidden");
+}
+
+// Delete Currently Selected Video from Firestore
+async function deleteCurrentVideo() {
+    if (!currentPlayingVideo || !currentPlayingVideo.id) {
+        alert("No video selected to delete!");
+        return;
+    }
+
+    if (sessionStorage.getItem("liyoTubeUnlocked") !== "true") {
+        alert("Please unlock with your PIN first!");
+        return;
+    }
+
+    const confirmDelete = confirm(`Are you sure you want to delete "${currentPlayingVideo.title}"?`);
+    if (!confirmDelete) return;
+
+    const deleteBtn = document.getElementById("deleteVideoBtn");
+    const videoIdToDelete = currentPlayingVideo.id;
+
+    try {
+        if (deleteBtn) deleteBtn.disabled = true;
+        await db.collection("videos").doc(videoIdToDelete).delete();
+        closePlayer();
+        alert("Video deleted!");
+    } catch (err) {
+        console.error(err);
+        alert("Error deleting video. Check Firestore rules/connection.");
+    } finally {
+        if (deleteBtn) deleteBtn.disabled = false;
+    }
 }
 
 function searchVideos() {
