@@ -345,9 +345,10 @@ video {
     border-radius: 6px;
     cursor: pointer;
     border: 1px dashed #666;
+    word-break: break-all;
 }
 
-.file-label input {
+.hidden-file-input {
     display: none;
 }
 
@@ -380,6 +381,12 @@ video {
     justify-content: space-between;
     gap: 10px;
     margin-top: 4px;
+}
+
+#uploadStatus {
+    font-size: 13px;
+    color: #dddddd;
+    min-height: 16px;
 }
 
 #customPanelStatus {
