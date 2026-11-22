@@ -14,7 +14,7 @@ const firebaseConfig = {
 
 // 2. Default Cloudinary විස්තර
 const CLOUD_NAME = "uqgqeszi";
-const DEFAULT_UPLOAD_PRESET = "YOUR_UPLOAD_PRESET"; // Cloudinary Unsigned preset නම
+const DEFAULT_UPLOAD_PRESET = "YOUR_UPLOAD_PRESET"; // Custom Panel එකෙනුත් දාන්න පුළුවන්
 
 const DEFAULT_SETTINGS = {
     siteName: "LiyoTube",
@@ -125,11 +125,16 @@ function resetCustomSettings() {
     document.getElementById("customPanelStatus").innerText = "Reset to default! 🔄";
 }
 
+// Fixed File Name Display (Does NOT destroy fileInput!)
 function updateFileName() {
     const fileInput = document.getElementById("videoFile");
-    const label = document.getElementById("fileLabelText");
-    if (fileInput.files.length > 0) {
-        label.innerHTML = `✅ ${fileInput.files[0].name}<input type="file" id="videoFile" accept="video/*" onchange="updateFileName()">`;
+    const nameSpan = document.getElementById("fileNameDisplay");
+    if (fileInput && nameSpan) {
+        if (fileInput.files && fileInput.files.length > 0) {
+            nameSpan.innerText = "✅ " + fileInput.files[0].name;
+        } else {
+            nameSpan.innerText = "Select Video File (MP4)";
+        }
     }
 }
 
@@ -211,7 +216,8 @@ function closeUploadModal() {
     document.getElementById("uploadStatus").innerText = "";
 }
 
-async function uploadVideo() {
+// Upload Video to Cloudinary with Progress & Save to Firestore
+function uploadVideo() {
     const title = document.getElementById("videoTitle").value.trim();
     const desc = document.getElementById("videoDesc").value.trim();
     const fileInput = document.getElementById("videoFile");
@@ -219,8 +225,13 @@ async function uploadVideo() {
     const btn = document.getElementById("submitUpload");
     const activePreset = getSiteSettings().uploadPreset;
 
-    if (!title || fileInput.files.length === 0) {
-        alert("Please enter a title and select a video file!");
+    if (!title) {
+        alert("Please enter a video title!");
+        return;
+    }
+
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert("Please select a video file first!");
         return;
     }
 
@@ -235,35 +246,50 @@ async function uploadVideo() {
     formData.append("upload_preset", activePreset);
 
     btn.disabled = true;
-    statusDiv.innerText = "Uploading video... Please wait";
+    statusDiv.innerText = "Uploading video: 0%";
 
-    try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, {
-            method: "POST",
-            body: formData
-        });
-        const data = await res.json();
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`);
 
-        if (data.secure_url) {
-            await db.collection("videos").add({
-                title: title,
-                description: desc,
-                url: data.secure_url,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            statusDiv.innerText = "Upload Complete!";
-            document.getElementById("videoTitle").value = "";
-            document.getElementById("videoDesc").value = "";
-            fileInput.value = "";
-            setTimeout(closeUploadModal, 1200);
-        } else {
-            throw new Error("Upload failed");
+    xhr.upload.onprogress = function(event) {
+        if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            statusDiv.innerText = `Uploading video: ${percent}%`;
         }
-    } catch (error) {
-        console.error(error);
-        statusDiv.innerText = "Error uploading video. Check your Cloudinary settings.";
-    } finally {
+    };
+
+    xhr.onload = async function() {
+        try {
+            const data = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300 && data.secure_url) {
+                await db.collection("videos").add({
+                    title: title,
+                    description: desc,
+                    url: data.secure_url,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                statusDiv.innerText = "Upload Complete! ✅";
+                document.getElementById("videoTitle").value = "";
+                document.getElementById("videoDesc").value = "";
+                fileInput.value = "";
+                document.getElementById("fileNameDisplay").innerText = "Select Video File (MP4)";
+                setTimeout(closeUploadModal, 1200);
+            } else {
+                statusDiv.innerText = data.error?.message || "Upload failed. Check Cloudinary preset.";
+            }
+        } catch (err) {
+            console.error(err);
+            statusDiv.innerText = "Error saving video info to database.";
+        } finally {
+            btn.disabled = false;
+        }
+    };
+
+    xhr.onerror = function() {
+        statusDiv.innerText = "Network error while uploading video.";
         btn.disabled = false;
-    }
+    };
+
+    xhr.send(formData);
 }
