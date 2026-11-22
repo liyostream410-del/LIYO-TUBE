@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">LiyoTube - Private Vault</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+    <!-- PIN Lock Screen -->
+    <div id="lockScreen" class="lock-screen">
+        <div class="lock-box">
+            <span class="material-icons lock-icon">lock</span>
+            <h2 id="lockSiteName">LiyoTube</h2>
+            <p id="lockSubtext">Enter your PIN to unlock your private videos</p>
+            <input type="password" id="pinInput" inputmode="numeric" maxlength="10" placeholder="Enter PIN" onkeydown="if(event.key==='Enter') unlockApp()">
+            <button onclick="unlockApp()">Unlock</button>
+            <p id="pinError" class="error-text"></p>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden until unlocked) -->
+    <div id="appContainer" class="hidden">
+        <nav class="navbar">
+            <div class="logo-wrap">
+                <div class="logo">
+                    <span class="material-icons brand-icon">play_circle_filled</span>
+                    <span id="navSiteName">LiyoTube</span>
+                </div>
+                <span id="navTagline" class="tagline">Private Vault</span>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search videos..." onkeyup="searchVideos()">
+                <button onclick="searchVideos()"><span class="material-icons">search</span></button>
+            </div>
+
+            <div class="nav-actions">
+                <button class="upload-btn" onclick="openUploadModal()">
+                    <span class="material-icons">video_call</span>
+                    <span class="btn-label">Upload</span>
+                </button>
+                <button class="icon-btn" onclick="openCustomPanel()" title="Custom Panel">
+                    <span class="material-icons">settings</span>
+                </button>
+                <button class="icon-btn" onclick="lockApp()" title="Lock">
+                    <span class="material-icons">lock_outline</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Video Player Section -->
+        <div id="playerSection" class="player-section hidden">
+            <div class="player-wrapper">
+                <video id="mainVideoPlayer" controls autoplay></video>
+                <button class="close-player" onclick="closePlayer()">✕ Close Player</button>
+            </div>
+            <h2 id="playingTitle">Video Title</h2>
+            <p id="playingDesc">Video description goes here...</p>
+        </div>
+
+        <!-- Video Grid -->
+        <main class="video-grid" id="videoGrid">
+            <p style="color: #aaa; text-align: center; width: 100%;">Loading videos...</p>
+        </main>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeUploadModal()">&times;</span>
+            <h2>Upload New Video</h2>
+            <input type="text" id="videoTitle" placeholder="Video Title (Required)" required>
+            <textarea id="videoDesc" placeholder="Video Description"></textarea>
+            <label class="file-label" id="fileLabelText">
+                Select Video File (MP4)
+                <input type="file" id="videoFile" accept="video/*" onchange="updateFileName()">
+            </label>
+            <div id="uploadStatus"></div>
+            <button id="submitUpload" class="primary-action-btn" onclick="uploadVideo()">Upload Now</button>
+        </div>
+    </div>
+
+    <!-- Custom Panel Modal -->
+    <div id="customPanelModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeCustomPanel()">&times;</span>
+            <h2>Custom Panel</h2>
+            <p class="panel-note">Customize site details & upload settings (Unlocked with your PIN)</p>
+
+            <label class="field-label">Site Name</label>
+            <input type="text" id="customSiteName" placeholder="e.g. LiyoTube">
+
+            <label class="field-label">Tagline / Subtitle</label>
+            <input type="text" id="customTagline" placeholder="e.g. Private Vault">
+
+            <label class="field-label">Accent Color</label>
+            <select id="customAccentColor" class="select-input">
+                <option value="#ff0000">YouTube Red (#ff0000)</option>
+                <option value="#2563eb">Royal Blue (#2563eb)</option>
+                <option value="#16a34a">Emerald Green (#16a34a)</option>
+                <option value="#9333ea">Cyber Purple (#9333ea)</option>
+                <option value="#ea580c">Sunset Orange (#ea580c)</option>
+            </select>
+
+            <label class="field-label">Cloudinary Upload Preset (Unsigned)</label>
+            <input type="text" id="customUploadPreset" placeholder="e.g. liyotube_preset">
+
+            <div id="customPanelStatus"></div>
+
+            <div class="panel-btn-row">
+                <button type="button" class="secondary-btn" onclick="resetCustomSettings()">Reset Default</button>
+                <button type="button" class="primary-action-btn" onclick="saveCustomSettings()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
