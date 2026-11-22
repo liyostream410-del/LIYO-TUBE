@@ -14,7 +14,7 @@
         <div class="lock-box">
             <span class="material-icons lock-icon">lock</span>
             <h2 id="lockSiteName">LiyoTube</h2>
-            <p id="lockSubtext">Enter your PIN to unlock your private videos</p>
+            <p id="lockSubtext">Enter your PIN to unlock LiyoTube</p>
             <input type="password" id="pinInput" inputmode="numeric" maxlength="10" placeholder="Enter PIN" onkeydown="if(event.key==='Enter') unlockApp()">
             <button onclick="unlockApp()">Unlock</button>
             <p id="pinError" class="error-text"></p>
@@ -74,10 +74,12 @@
             <h2>Upload New Video</h2>
             <input type="text" id="videoTitle" placeholder="Video Title (Required)" required>
             <textarea id="videoDesc" placeholder="Video Description"></textarea>
-            <label class="file-label" id="fileLabelText">
-                Select Video File (MP4)
-                <input type="file" id="videoFile" accept="video/*" onchange="updateFileName()">
+
+            <label class="file-label" for="videoFile">
+                <span id="fileNameDisplay">Select Video File (MP4)</span>
             </label>
+            <input type="file" id="videoFile" accept="video/*" class="hidden-file-input" onchange="updateFileName()">
+
             <div id="uploadStatus"></div>
             <button id="submitUpload" class="primary-action-btn" onclick="uploadVideo()">Upload Now</button>
         </div>
