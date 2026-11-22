@@ -57,7 +57,13 @@
                 <video id="mainVideoPlayer" controls autoplay></video>
                 <button class="close-player" onclick="closePlayer()">✕ Close Player</button>
             </div>
-            <h2 id="playingTitle">Video Title</h2>
+            <div class="player-header-row">
+                <h2 id="playingTitle">Video Title</h2>
+                <button id="deleteVideoBtn" class="delete-video-btn" onclick="deleteCurrentVideo()">
+                    <span class="material-icons">delete</span>
+                    <span>Delete Video</span>
+                </button>
+            </div>
             <p id="playingDesc">Video description goes here...</p>
         </div>
 
